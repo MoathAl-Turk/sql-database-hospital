@@ -10,6 +10,8 @@
         h2 { color: #0a66c2; margin-top: 30px; }
         .code-block { background: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; overflow-x: auto; }
         .project-image { width: 100%; border: 1px solid #ddd; border-radius: 5px; margin: 10px 0; }
+        .back-button { display: inline-block; margin-top: 40px; padding: 10px 20px; background-color: #0a66c2; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .back-button:hover { background-color: #004182; }
     </style>
 </head>
 <body>
@@ -29,14 +31,45 @@
     <p>The final phase was bringing the schema to life using Oracle SQL. Below is a sample of the table creation and some of the complex querying used to retrieve patient history.</p>
     
     <div class="code-block">
-<!-- Paste a snippet of your best SQL code below -->
-CREATE TABLE Patients (
-    PatientID INT PRIMARY KEY,
-    FirstName VARCHAR(50),
-    LastName VARCHAR(50),
-    AdmissionDate DATE
+<pre>
+-- 1. Table creation utilizing Primary Keys, Foreign Keys, and CHECK constraints
+CREATE TABLE Nurse(
+    EmployeeID NUMBER PRIMARY KEY,
+    ShiftType VARCHAR2(20),
+    Ward VARCHAR2(30),
+    OnCallStatus VARCHAR2(10)
+    CHECK(OnCallStatus IN('On-call','Off-call')),
+    FOREIGN KEY(EmployeeID) REFERENCES Employee(EmployeeID)
 );
+
+-- 2. Multi-table JOIN to retrieve complete patient and attending doctor records
+SELECT P.FName,
+       P.LName,
+       E.Name AS DoctorName,
+       T.Diagnosis
+FROM Patient P
+JOIN Treats T ON P.PatientID = T.PatientID
+JOIN Doctor D ON T.DoctorID = D.EmployeeID
+JOIN Employee E ON D.EmployeeID = E.EmployeeID;
+
+-- 3. Advanced nested subqueries to filter patients based on specialist treatment
+SELECT FName, LName
+FROM Patient
+WHERE PatientID IN
+(
+    SELECT PatientID
+    FROM Treats
+    WHERE DoctorID IN
+    (
+        SELECT EmployeeID
+        FROM Doctor
+        WHERE Specialty='Heart'
+    )
+);
+</pre>
     </div>
+
+    <a href="https://moathal-turk.github.io" class="back-button">← Back to Main Portfolio</a>
 
 </body>
 </html>
